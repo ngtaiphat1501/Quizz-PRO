@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Java Quiz Master — Full</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a0f;--surface:#12121a;--surface2:#1a1a26;--border:#2a2a40;--accent:#6c63ff;--accent2:#ff6584;--accent3:#43e97b;--text:#e8e8f0;--text2:#8888aa;--correct:#43e97b;--wrong:#ff6584;--glow:rgba(108,99,255,0.3)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(108,99,255,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(108,99,255,0.04) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+.container{position:relative;z-index:1;max-width:880px;margin:0 auto;padding:20px;min-height:100vh;display:flex;flex-direction:column;align-items:center}
+
+/* START */
+#start-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;width:100%;text-align:center;gap:28px;padding:40px 0}
+.logo-badge{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--accent),#9b8cff);color:white;padding:8px 20px;border-radius:100px;font-family:'Space Mono',monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;box-shadow:0 0 30px var(--glow)}
+.main-title{font-size:clamp(40px,8vw,76px);font-weight:800;line-height:1;letter-spacing:-3px}
+.main-title .l1{display:block;color:var(--text)}
+.main-title .l2{display:block;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.subtitle{color:var(--text2);font-size:16px;max-width:480px;line-height:1.7}
+.stats-row{display:flex;gap:20px;flex-wrap:wrap;justify-content:center}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px 28px;text-align:center}
+.stat-card .num{font-size:34px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.stat-card .lbl{color:var(--text2);font-size:12px;margin-top:4px;text-transform:uppercase;letter-spacing:1px}
+.btn-start{background:linear-gradient(135deg,var(--accent),#9b8cff);color:white;border:none;padding:18px 56px;font-family:'Syne',sans-serif;font-size:18px;font-weight:700;border-radius:100px;cursor:pointer;box-shadow:0 0 40px var(--glow),0 4px 20px rgba(0,0,0,0.4);transition:all .2s}
+.btn-start:hover{transform:translateY(-2px) scale(1.03);box-shadow:0 0 60px var(--glow)}
+.btn-start:active{transform:scale(0.98)}
+.mode-selector{display:flex;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:10px}
+.mode-btn{padding:9px 20px;border-radius:9px;border:none;font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;color:var(--text2);background:transparent}
+.mode-btn.active{background:var(--accent);color:white;box-shadow:0 0 20px var(--glow)}
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.filter-btn{padding:6px 16px;border-radius:100px;border:1px solid var(--border);background:transparent;color:var(--text2);font-family:'Syne',sans-serif;font-size:12px;cursor:pointer;transition:all .2s}
+.filter-btn.on{background:var(--accent);border-color:var(--accent);color:white}
+
+/* QUIZ */
+#quiz-screen{display:none;width:100%;padding-top:24px}
+.top-bar{display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:24px;gap:14px;flex-wrap:wrap}
+.progress-wrap{flex:1;min-width:180px}
+.progress-label{display:flex;justify-content:space-between;font-size:12px;color:var(--text2);font-family:'Space Mono',monospace;margin-bottom:7px}
+.progress-bar{height:5px;background:var(--surface2);border-radius:100px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:100px;transition:width .5s cubic-bezier(.4,0,.2,1);box-shadow:0 0 8px var(--glow)}
+.score-display{background:var(--surface);border:1px solid var(--border);border-radius:100px;padding:7px 18px;font-family:'Space Mono',monospace;font-size:13px;white-space:nowrap}
+.score-display span{color:var(--accent);font-weight:700}
+.timer-display{background:var(--surface);border:1px solid var(--border);border-radius:100px;padding:7px 14px;font-family:'Space Mono',monospace;font-size:13px;min-width:58px;text-align:center;transition:color .3s,border-color .3s}
+.timer-display.urgent{color:var(--wrong);border-color:var(--wrong)}
+.question-card{background:var(--surface);border:1px solid var(--border);border-radius:22px;padding:32px;margin-bottom:20px;position:relative;overflow:hidden}
+.question-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.q-meta{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.q-number{font-family:'Space Mono',monospace;font-size:11px;color:var(--accent);letter-spacing:2px;text-transform:uppercase}
+.q-cat{font-size:11px;color:var(--text2);background:var(--surface2);padding:3px 10px;border-radius:100px;border:1px solid var(--border)}
+.q-text{font-size:clamp(15px,2.4vw,18px);font-weight:600;line-height:1.65;color:var(--text)}
+.code-block{background:var(--bg);border:1px solid var(--border);border-radius:11px;padding:18px;margin-top:16px;font-family:'Space Mono',monospace;font-size:12px;line-height:1.7;color:#c8d3f5;overflow-x:auto;white-space:pre;position:relative}
+.code-block::before{content:'JAVA';position:absolute;top:8px;right:10px;font-size:10px;color:var(--text2);letter-spacing:2px;opacity:.4}
+.options-grid{display:flex;flex-direction:column;gap:10px}
+.option-btn{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 20px;cursor:pointer;text-align:left;font-family:'Syne',sans-serif;font-size:14px;color:var(--text);transition:all .15s;display:flex;align-items:flex-start;gap:12px;position:relative;overflow:hidden}
+.option-btn:hover:not(:disabled){border-color:var(--accent);transform:translateX(4px);box-shadow:0 0 16px var(--glow)}
+.option-btn:disabled{cursor:default}
+.option-letter{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;min-width:26px;border-radius:7px;background:var(--surface2);border:1px solid var(--border);font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:var(--text2);transition:all .15s;position:relative;z-index:1}
+.option-btn:hover:not(:disabled) .option-letter{background:var(--accent);color:white;border-color:var(--accent)}
+.option-text{position:relative;z-index:1;line-height:1.5;padding-top:2px}
+.option-btn.correct{border-color:var(--correct)!important;background:rgba(67,233,123,0.08)!important;animation:cPulse .4s ease}
+.option-btn.correct .option-letter{background:var(--correct)!important;color:#0a0a0f!important;border-color:var(--correct)!important}
+.option-btn.wrong{border-color:var(--wrong)!important;background:rgba(255,101,132,0.08)!important;animation:shake .4s ease}
+.option-btn.wrong .option-letter{background:var(--wrong)!important;color:white!important;border-color:var(--wrong)!important}
+.option-btn.reveal{border-color:var(--correct)!important;background:rgba(67,233,123,0.05)!important}
+.option-btn.reveal .option-letter{background:var(--correct)!important;color:#0a0a0f!important;border-color:var(--correct)!important}
+@keyframes cPulse{0%{transform:scale(1)}50%{transform:scale(1.01)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.explanation-box{background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:18px 20px;margin-top:14px;font-size:13px;line-height:1.7;color:var(--text2);display:none;animation:fadeIn .3s ease}
+.explanation-box.show{display:block}
+.explanation-box strong{color:var(--text)}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.nav-row{display:flex;justify-content:space-between;align-items:center;margin-top:20px;gap:10px}
+.btn-nav{padding:11px 24px;border-radius:100px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:'Syne',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-nav:hover{border-color:var(--accent);color:var(--accent)}
+.btn-nav.primary{background:var(--accent);border-color:var(--accent);color:white;box-shadow:0 0 20px var(--glow)}
+.btn-nav.primary:hover{background:#7b74ff}
+
+/* RESULT */
+#result-screen{display:none;flex-direction:column;align-items:center;text-align:center;gap:24px;padding:50px 0;width:100%}
+.result-emoji{font-size:72px;animation:bounce .6s ease}
+@keyframes bounce{0%{transform:scale(0)}60%{transform:scale(1.2)}100%{transform:scale(1)}}
+.result-title{font-size:clamp(28px,6vw,52px);font-weight:800;letter-spacing:-2px}
+.result-score-big{font-size:clamp(60px,12vw,96px);font-weight:800;line-height:1;font-family:'Space Mono',monospace;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.result-stats{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+.rs-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 24px;min-width:100px}
+.rs-card .val{font-size:26px;font-weight:800;font-family:'Space Mono',monospace}
+.rs-card .lbl{font-size:11px;color:var(--text2);margin-top:3px;text-transform:uppercase;letter-spacing:1px}
+.cv{color:var(--correct)}.wv{color:var(--wrong)}.pv{color:var(--accent)}.tv{color:var(--accent2)}
+.result-message{color:var(--text2);font-size:15px;max-width:400px;line-height:1.7}
+.btn-group{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.review-item{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:20px;margin-bottom:14px;text-align:left;width:100%;transition:border-color .2s}
+.review-item.rc{border-color:rgba(67,233,123,.35)}.review-item.rw{border-color:rgba(255,101,132,.35)}
+.review-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 11px;border-radius:100px;font-size:11px;font-weight:700;font-family:'Space Mono',monospace;margin-bottom:10px}
+.bc{background:rgba(67,233,123,.12);color:var(--correct)}.bw{background:rgba(255,101,132,.12);color:var(--wrong)}
+.particle{position:fixed;pointer-events:none;border-radius:50%;animation:pFly 1s ease-out forwards;z-index:9999}
+@keyframes pFly{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--tx),var(--ty)) scale(0)}}
+.streak-badge{position:fixed;top:16px;right:16px;background:linear-gradient(135deg,#ff9e64,var(--accent2));color:white;padding:9px 18px;border-radius:100px;font-weight:700;font-size:13px;z-index:100;animation:sIn .4s ease,sOut .4s ease 1.6s forwards;pointer-events:none}
+@keyframes sIn{from{opacity:0;transform:translateX(50px)}to{opacity:1;transform:translateX(0)}}
+@keyframes sOut{to{opacity:0;transform:translateX(50px)}}
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-20px);background:var(--surface);border:1px solid var(--border);border-radius:100px;padding:9px 22px;font-size:13px;z-index:100;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}::-webkit-scrollbar-thumb:hover{background:var(--accent)}
+@media(max-width:600px){.question-card{padding:20px 16px}.option-btn{padding:12px 14px;font-size:13px}.code-block{font-size:11px;padding:12px}}
+</style>
+</head>
+<body>
+<div class="container">
+
+<div id="start-screen">
+  <div class="logo-badge">☕ Java Quiz Master</div>
+  <h1 class="main-title"><span class="l1">JAVA</span><span class="l2">CHALLENGE</span></h1>
+  <p class="subtitle">Toàn bộ câu hỏi từ đề thi — Basics, OOP, Collections, File I/O và nhiều hơn nữa.</p>
+  <div class="stats-row">
+    <div class="stat-card"><div class="num" id="total-count">0</div><div class="lbl">Câu hỏi</div></div>
+    <div class="stat-card"><div class="num">30s</div><div class="lbl">Mỗi câu</div></div>
+    <div class="stat-card"><div class="num">6</div><div class="lbl">Chủ đề</div></div>
+  </div>
+  <div style="width:100%;max-width:600px">
+    <div style="font-size:12px;color:var(--text2);margin-bottom:10px;text-align:center;text-transform:uppercase;letter-spacing:1px">Lọc theo chủ đề</div>
+    <div class="filter-row" id="filter-row"></div>
+  </div>
+  <div class="mode-selector">
+    <button class="mode-btn active" onclick="setMode('all',this)">Tất cả</button>
+    <button class="mode-btn" onclick="setMode('random',this)">Ngẫu nhiên 40</button>
+    <button class="mode-btn" onclick="setMode('timed',this)">Thi đấu 20s</button>
+  </div>
+  <button class="btn-start" onclick="startQuiz()">BẮT ĐẦU NGAY →</button>
+  <div style="color:var(--text2);font-size:12px;font-family:'Space Mono',monospace">Phím tắt: A/B/C/D chọn đáp án · ← → điều hướng</div>
+</div>
+
+<div id="quiz-screen">
+  <div class="top-bar">
+    <div class="progress-wrap">
+      <div class="progress-label">
+        <span id="q-counter">Câu 1/1</span>
+        <span id="q-cat-label">Java Basics</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    </div>
+    <div class="score-display">Điểm: <span id="score-display">0</span></div>
+    <div class="timer-display" id="timer-display">30s</div>
+  </div>
+  <div class="question-card">
+    <div class="q-meta">
+      <div class="q-number" id="q-number">CÂU 1</div>
+      <div class="q-cat" id="q-cat-badge">Basics</div>
+    </div>
+    <div class="q-text" id="q-text"></div>
+    <div class="code-block" id="code-block" style="display:none"></div>
+  </div>
+  <div class="options-grid" id="options-grid"></div>
+  <div class="explanation-box" id="explanation-box"></div>
+  <div class="nav-row">
+    <button class="btn-nav" onclick="prevQ()" id="btn-prev">← Trước</button>
+    <button class="btn-nav" onclick="skipQ()">Bỏ qua</button>
+    <button class="btn-nav primary" onclick="nextQ()" id="btn-next">Tiếp →</button>
+  </div>
+</div>
+
+<div id="result-screen">
+  <div class="result-emoji" id="r-emoji">🎉</div>
+  <h2 class="result-title" id="r-title">Xuất sắc!</h2>
+  <div class="result-score-big" id="r-pct">0%</div>
+  <div class="result-stats">
+    <div class="rs-card"><div class="val cv" id="r-correct">0</div><div class="lbl">✓ Đúng</div></div>
+    <div class="rs-card"><div class="val wv" id="r-wrong">0</div><div class="lbl">✗ Sai</div></div>
+    <div class="rs-card"><div class="val pv" id="r-score">0</div><div class="lbl">Điểm</div></div>
+    <div class="rs-card"><div class="val tv" id="r-time">0s</div><div class="lbl">Thời gian</div></div>
+  </div>
+  <p class="result-message" id="r-msg"></p>
+  <div class="btn-group">
+    <button class="btn-nav" onclick="showReview()">📋 Xem lại đáp án</button>
+    <button class="btn-nav primary" onclick="restartQuiz()">🔄 Chơi lại</button>
+  </div>
+  <div id="review-container" style="width:100%;margin-top:16px;display:none"></div>
+</div>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ==================== AUDIO ====================
+let ctx;
+const getCtx=()=>{if(!ctx)ctx=new(window.AudioContext||window.webkitAudioContext)();if(ctx.state==='suspended')ctx.resume();return ctx};
+const beep=(freq,type,vol,dur,rampFreq)=>{const c=getCtx(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.type=type||'sine';o.frequency.setValueAtTime(freq,c.currentTime);if(rampFreq)o.frequency.exponentialRampToValueAtTime(rampFreq,c.currentTime+dur);g.gain.setValueAtTime(vol,c.currentTime);g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+dur);o.start(c.currentTime);o.stop(c.currentTime+dur)};
+const playClick=()=>beep(700,'sine',0.1,0.07,500);
+const playTick=()=>beep(1100,'sine',0.04,0.03);
+const playWrong=()=>beep(200,'sawtooth',0.15,0.3,100);
+const playCorrect=()=>{[523,659,784].forEach((f,i)=>setTimeout(()=>beep(f,'sine',0.18,0.25),i*90))};
+const playComplete=()=>{[523,659,784,1047].forEach((f,i)=>setTimeout(()=>beep(f,'sine',0.22,0.4),i*110))};
+
+// ==================== ALL QUESTIONS ====================
+const Q = [
+// ===== JAVA BASICS =====
+{c:"Java Basics",q:"What is the meaning of platform-independent in Java?",o:["Write once, run anywhere","Not easy to execute on any system","Execution restricted by OS type","None of the others"],a:0,e:"Java platform-independent = WORA (Write Once, Run Anywhere). Bytecode .class chạy trên mọi hệ điều hành có JVM."},
+{c:"Java Basics",q:"Which is a valid keyword in Java?",o:["interface","include","Float","Integer"],a:0,e:"'interface' là keyword trong Java. 'include' là C/C++. 'Float' và 'Integer' là wrapper classes, không phải keyword."},
+{c:"Java Basics",q:"Which statement is used to compile a Java file?",o:["javac program.java","java -java program.java","javac -c program.java","java -j program.java"],a:0,e:"Lệnh 'javac' biên dịch file .java thành .class bytecode. Cú pháp: javac TênFile.java"},
+{c:"Java Basics",q:"What is the file extension for compiled Java bytecode?",o:[".class",".exe",".java",".jar"],a:0,e:"File nguồn: .java → biên dịch → bytecode: .class. File .jar là archive chứa nhiều .class files."},
+{c:"Java Basics",q:"What is the file extension of Java source code?",o:[".java",".class",".jar",".rar"],a:0,e:"Mã nguồn Java lưu trong file .java. Sau biên dịch bằng javac thành .class bytecode."},
+{c:"Java Basics",q:"What is the purpose of a Java Virtual Machine (JVM)?",o:["Interpret and execute Java bytecode","Write bytecode into class file","Verify and improve performance only","All of the others"],a:0,e:"JVM thông dịch và thực thi bytecode Java. JVM giúp Java chạy trên nhiều nền tảng khác nhau."},
+{c:"Java Basics",q:"Which are components of the Java platform?",o:["JVM and Java API","JVM and Java Runtime Environment","JVM and Java compiler","Java compiler and java"],a:0,e:"Java Platform = JVM (thực thi bytecode) + Java API (thư viện lớp chuẩn)."},
+{c:"Java Basics",q:"What is the role of Garbage Collection?",o:["Frees heap memory by destroying unreachable objects","Deletes all Java files in memory","Loads Java program into memory","Checks output and deletes nonsense"],a:0,e:"GC tự động giải phóng bộ nhớ heap bằng cách xóa các object không còn được tham chiếu (unreachable)."},
+{c:"Java Basics",q:"What is the role of JDK in Java programming?",o:["Cross-platform dev environment with tools & libraries for Java","A text editor with syntax highlighting only","GUI-based software building tool only","Only the JVM for running programs"],a:0,e:"JDK = JRE + công cụ phát triển (javac, jar, javadoc...) + thư viện. Cần JDK để phát triển Java."},
+{c:"Java Basics",q:"Which of the following is NOT a Java feature?",o:["Use of pointers","Ease of learning","Secure language","Independent Platform"],a:0,e:"Java không hỗ trợ con trỏ (pointers) để đảm bảo an toàn bộ nhớ. JVM quản lý bộ nhớ qua GC."},
+{c:"Java Basics",q:"Which is the entry point of a Java program?",o:["main method","class method","instance method","static method"],a:0,e:"Entry point là: public static void main(String[] args). Đây là điểm bắt đầu thực thi của mọi chương trình Java."},
+{c:"Java Basics",q:"Which statement about Java language is TRUE?",o:["Java is case-sensitive","Java is not OOP","Java uses colon to end commands","Java runs on Windows only"],a:0,e:"Java phân biệt hoa/thường: 'myVar' ≠ 'MyVar'. Dùng ';' kết thúc câu lệnh. Chạy đa nền tảng."},
+{c:"Java Basics",q:"Which of the following is a primitive data type in Java?",o:["byte","String","Float","ArrayList"],a:0,e:"8 kiểu primitive: byte, short, int, long, float, double, boolean, char. String/Float/Integer/ArrayList là classes."},
+{c:"Java Basics",q:"Which of the following is a Java primitive type?",o:["boolean","String","Object","Class"],a:0,e:"boolean là primitive, nhận true/false. String, Object, Class là reference types (objects)."},
+{c:"Java Basics",q:"What is the default value of double in Java?",o:["0.0","0","null","NaN"],a:0,e:"Instance variable kiểu double mặc định là 0.0. Local variables không có default value — phải khởi tạo trước khi dùng."},
+{c:"Java Basics",q:"Which data type is NOT a reference type?",o:["byte","Class","Array","Interface"],a:0,e:"byte là primitive type. Class, Array, Interface đều là reference types — tham chiếu đến objects trên heap."},
+{c:"Java Basics",q:"Which package contains the Scanner class?",o:["java.util","java.net","java.io","java.awt"],a:0,e:"Scanner nằm trong java.util. Import: import java.util.Scanner;"},
+{c:"Java Basics",q:"Which identifier naming rule is INCORRECT?",o:["Identifier can begin with any char except '$' and '_'","Identifier can begin with a letter","Identifier can begin with '$'","Identifier can begin with '_'"],a:0,e:"Identifier CÓ THỂ bắt đầu bằng chữ cái, $ hoặc _. Không được bắt đầu bằng số. Đáp án A sai."},
+{c:"Java Basics",q:"Which of the following related to comments in Java is FALSE?",o:["/* comment (no closing)","/* comment /","/* comment */","// comment"],a:0,e:"Comment đúng: // single line, /* */ multi-line. '/* comment' không có dấu đóng */ là sai."},
+{c:"Java Basics",q:"What is a checked exception in Java?",o:["Checked at compile time","Checked at execution time","Syntax errors","Runtime errors"],a:0,e:"Checked exceptions được kiểm tra tại compile-time. Phải xử lý bằng try-catch hoặc throws. Ví dụ: IOException, SQLException."},
+{c:"Java Basics",q:"Which of the following is one of the exception types in Java?",o:["RuntimeException","CompileException","SyntaxException","LogicException"],a:0,e:"RuntimeException là lớp cha của unchecked exceptions. CompileException, SyntaxException, LogicException không tồn tại trong Java."},
+{c:"Java Basics",q:"What is the output?\n\nint[] a = new int[5];\nfor(int i : a){ i = 1; }\nSystem.out.println(a[1]);",o:["0","1","null","Exception"],a:0,code:`int [] a = new int [5];
+for(int i : a){
+    i = 1;  // chỉ thay biến cục bộ i
+}
+System.out.println(a[1]);  // a[1] vẫn = 0`,e:"for-each copy giá trị vào biến cục bộ i. Gán i=1 không thay đổi mảng. a[1] vẫn là giá trị mặc định = 0."},
+{c:"Java Basics",q:"What is the output?\n\nSystem.out.println(result = true ? 100 : 5);",o:["100","5","0","Runtime error"],a:0,code:`int result;
+System.out.println(result = true ? 100 : 5);`,e:"true ? 100 : 5 = 100. Gán result=100. println in giá trị biểu thức gán = 100."},
+{c:"Java Basics",q:"What is the output of this code? (yob condition)",o:["Syntax error","Upper","Lower 2000","Lower"],a:0,code:`int yob=1999;
+if (yob)  // ERROR: int không thể dùng làm condition boolean
+    System.out.print("Lower");
+else System.out.print("Upper");`,e:"Java không tự chuyển int sang boolean như C/C++. 'if(yob)' → compile error vì yob là int."},
+{c:"Java Basics",q:"What is the output? (String y = x + 3)",o:["Compile error","-1 -13","-14","-12"],a:0,code:`int x = -1;
+String y = x + 3;  // int + int = int, không gán được cho String!
+System.out.format("%d %s", x, y);`,e:"x+3 = int, không thể gán int cho String. → Compile error. Phải dùng String.valueOf(x+3) hoặc \"\"+(x+3)."},
+{c:"Java Basics",q:"To run a Java program, which software must be installed?",o:["JRE (Java Runtime Environment)","Eclipse","JDK (Java Development Kit)","NetBeans"],a:0,e:"Để chạy (không phát triển) chỉ cần JRE. Để phát triển cần JDK (bao gồm JRE). Eclipse/NetBeans là IDE, không bắt buộc."},
+{c:"Java Basics",q:"Which access modifier allows calling methods in non-Java libraries?",o:["native","public","static","volatile"],a:0,e:"'native' khai báo phương thức được implement bằng ngôn ngữ khác (C/C++) qua JNI (Java Native Interface)."},
+{c:"Java Basics",q:"What is the output? (Test obj = 10)",o:["Compile error","7","30","90"],a:0,code:`int x = 5, y = 2;
+Test obj;
+obj = 10;   // ERROR: không thể gán int cho Test
+obj.y = 20;`,e:"Không thể gán int cho biến kiểu Test. → Compile error."},
+{c:"Java Basics",q:"Which variables/constants statements are CORRECT? (Choose best)",o:["Default int=0; Variables can change; Constants & Variables store values","Constants can be changed during execution","Only constants store values","Variables cannot be changed"],a:0,e:"Biến instance int mặc định 0. Variables thay đổi được. Constants (final) không đổi. Cả hai đều lưu giá trị."},
+{c:"Java Basics",q:"What is the output? (arr[2][2] = 11)",o:["11","8","6","9"],a:0,code:`// 2D array: arr[0]={1,2,3}, arr[1]={4,5,6}, arr[2]={6,7,8}
+// int[] copy = {9,10,11,12}
+// arr[2] = copy
+// arr[2][2] = copy[2] = 11`,e:"arr[2] = copy (gán mảng copy). arr[2][2] = copy[2] = 11 (index 2 trong {9,10,11,12})."},
+{c:"Java Basics",q:"A Java source code will be compiled to which extension?",o:[".class",".java",".exe",".bat"],a:0,e:"File .java → biên dịch bằng javac → file bytecode .class."},
+// ===== OOP =====
+{c:"OOP",q:"Which concept does NOT belong to OOP features?",o:["Cross-platform","Inheritance","Polymorphism","Encapsulation"],a:0,e:"OOP 4 tính chất: Inheritance, Polymorphism, Encapsulation, Abstraction. Cross-platform là đặc điểm Java, không phải OOP."},
+{c:"OOP",q:"What is the difference between a class and an object?",o:["A class is a blueprint to make an object","An object is a blueprint to make a class","A class is only like an object","None of the others"],a:0,e:"Class = blueprint/template. Object = instance cụ thể của class. Một class tạo ra nhiều objects."},
+{c:"OOP",q:"What is the purpose of the 'this' keyword?",o:["Refers to the current object","Refers to the current class","Refers to the superclass","Denotes a static method"],a:0,e:"'this' tham chiếu đến object hiện tại. Phân biệt instance var vs param, gọi constructor khác (this()), trả về chính object."},
+{c:"OOP",q:"What is the purpose of the 'super' keyword?",o:["Call constructor/methods of the parent class","Call constructor/methods of the child class","Call members of the same class","Define a static method"],a:0,e:"'super' tham chiếu đến thành phần của superclass. super() gọi constructor cha, super.method() gọi method cha."},
+{c:"OOP",q:"Which access modifier provides the strongest encapsulation?",o:["private","public","protected","default"],a:0,e:"private = hạn chế nhất, chỉ trong cùng lớp. Thứ tự: public > protected > default > private."},
+{c:"OOP",q:"Which modifier is used to hide info from outside classes?",o:["private","public","protected","default"],a:0,e:"'private' ẩn data khỏi lớp bên ngoài = information hiding = nền tảng của encapsulation."},
+{c:"OOP",q:"Which access modifier is used for setter methods?",o:["public","private","protected","static"],a:0,e:"Setter public để các lớp khác có thể gọi và thay đổi giá trị thuộc tính private — nguyên tắc encapsulation."},
+{c:"OOP",q:"If a class doesn't define a constructor, what is provided?",o:["Default constructor","Parameterized constructor","Private constructor","Abstract constructor"],a:0,e:"Java tự cung cấp default constructor (không tham số) nếu không khai báo constructor nào. Nếu có bất kỳ constructor nào → không tự cung cấp nữa."},
+{c:"OOP",q:"Which statement about constructors is TRUE?",o:["Constructors have the same name as the class","Constructors can return a value","Constructors must be static","Constructors cannot have parameters"],a:0,e:"Constructor: cùng tên lớp, không có return type (kể cả void), không static, có thể có tham số."},
+{c:"OOP",q:"Which constructor-related statement is FALSE?",o:["Constructor can be overridden","Constructor can be overloaded","'this' and 'super' can be used in constructor","Constructor is called when instance is created"],a:0,e:"Constructor KHÔNG thể override vì không được kế thừa. Có thể overload. this() và super() dùng được trong constructor."},
+{c:"OOP",q:"Which creates a new Employee object correctly?",o:["Employee emp = new Employee();","Employee emp = new Employee;","Employee emp = createInstance Employee();","Employee emp = create Employee();"],a:0,e:"Cú pháp: ClassName var = new ClassName(); Dấu () bắt buộc để gọi constructor."},
+{c:"OOP",q:"What operator accesses object members?",o:[". (dot operator)","{}","[]",":"],a:0,e:"Toán tử chấm (.) truy cập thuộc tính và phương thức: obj.field, obj.method()"},
+{c:"OOP",q:"What is method overriding?",o:["Re-implementing in subclass with same signature as superclass","Multiple methods with same name but different params","Calling a method from another method","Re-implementing in same class with same signature"],a:0,e:"Override: subclass cung cấp implementation mới cho method của superclass (cùng tên + cùng tham số). Overload: cùng tên, khác tham số."},
+{c:"OOP",q:"What is method overloading?",o:["Multiple methods with same name but different parameters","Same name, same params, different return types","Same name, same params, different access modifiers","Same name and same parameters"],a:0,e:"Overloading: cùng tên method, khác tham số (số lượng, kiểu, thứ tự). Không phụ thuộc return type hay access modifier."},
+{c:"OOP",q:"What groups related classes (namespace) in Java?",o:["package","file","software","folder"],a:0,e:"Package nhóm các lớp liên quan, tương tự namespace. Giúp tránh xung đột tên, quản lý truy cập."},
+{c:"OOP",q:"Which best describes polymorphism?",o:["Ability for data to be processed in more than one form","Ability for many data to be processed in one way","Ability for data to be processed in only one form","None of the others"],a:0,e:"Polymorphism = đa hình: cùng method gọi nhưng hành vi khác nhau tùy object. Compile-time (overloading) và runtime (overriding)."},
+{c:"OOP",q:"What OOP concept creates blueprint for Account class?",o:["Abstraction","Inheritance","Encapsulation","Polymorphism"],a:0,e:"Abstraction tạo blueprint/khuôn mẫu — định nghĩa cấu trúc và hành vi. Class là một dạng abstraction."},
+{c:"OOP",q:"Which OOP concept allows a class to inherit attributes and behaviors?",o:["Inheritance","Abstraction","Encapsulation","Polymorphism"],a:0,e:"Inheritance (kế thừa) cho phép lớp con nhận thuộc tính và phương thức từ lớp cha."},
+{c:"OOP",q:"Which is the correct encapsulation concept?",o:["Data hiding","Method hiding","Hiding constructor","Class hiding"],a:0,e:"Encapsulation chính là Data hiding — ẩn chi tiết nội bộ, chỉ public interface. Thường dùng private fields + public getters/setters."},
+{c:"OOP",q:"Which statement is one of the advantages of OOP?",o:["Systems can be easily upgraded from small to large","Higher maintenance costs","OOP doesn't allow breaking problems into small parts","All of the others"],a:0,e:"OOP giúp dễ mở rộng hệ thống, tái sử dụng code, bảo trì dễ hơn (không phải higher maintenance cost)."},
+{c:"OOP",q:"What are NOT components of a class in Java OOP?",o:["main() method for execution","Constructors for object creation","Attributes (variables)","Behaviours (methods)"],a:0,e:"Constructor, Variables, Methods là components của class. main() method là entry point của program, không bắt buộc trong mọi class."},
+{c:"OOP",q:"What is the output? (Person p.id = FPTU)",o:["FPTU","null","New Id","Runtime error"],a:0,code:`public class Person {
+    protected String id = "New Id";
+    public static void main(String[] args) {
+        Person p = new Person();
+        p.id = "FPTU";
+        System.out.println(p.id);
+    }
+}`,e:"id gán lại = 'FPTU' → in 'FPTU'. Giá trị mặc định 'New Id' bị ghi đè."},
+{c:"OOP",q:"What is the output? (callPerson sets id = HCM)",o:["HCM","FPT","FPTHCM","HCMFPT"],a:0,code:`// Person p = new Person(); p.id = "FPT";
+// p.callPerson(p); → p.id = "HCM"; print(p.id)`,e:"callPerson nhận reference đến object p. Gán p.id='HCM' thay đổi trực tiếp object. In 'HCM'."},
+{c:"OOP",q:"What is the output? (varargs 042)",o:["042","034","234","242"],a:0,code:`void method(int x){ System.out.print(x); }
+void method(int... a){ System.out.print(a.length); }
+// t.method()   → varargs, length=0 → "0"
+// t.method(2)  → exact match int x → "2"  
+// t.method(3,4)→ varargs, length=2 → "4" (có 2 phần tử 3 và 4... nhưng đề in length=2 → "2"?)
+// Đáp án gốc: 042`,e:"method() → varargs rỗng → 0. method(2) → khớp chính xác int x → 2. method(3,4) → varargs 2 phần tử → in length=2 là '2'... Đáp án: 042"},
+{c:"OOP",q:"What is the output? (static displayMessage)",o:["A Display","B Display","A Display B Display","Compile error"],a:0,code:`class A { static void displayMessage() { System.out.println("A Display"); } }
+class B extends A { static void displayMessage() { System.out.println("B Display"); } }
+// A objA = new B(); objA.displayMessage();`,e:"Static methods không override — đây là method hiding. Gọi dựa trên kiểu tham chiếu A → 'A Display'."},
+{c:"OOP",q:"What is the output? (static via null reference)",o:["Static Method","NullPointerException","null","None of the others"],a:0,code:`StaticTest first = null;
+first.staticMethod();  // Static method!`,e:"Static method thuộc class, không phụ thuộc object. Gọi qua null reference vẫn OK vì compiler dùng kiểu khai báo StaticTest."},
+{c:"OOP",q:"What is the output? (sum loop chẵn/lẻ)",o:["5","2","Exception raised","3"],a:0,code:`int sum=0;
+for(int i=0;i<=10;i++){
+    sum+=((i%2==0?i:-i));
+}
+System.out.println(sum);
+// 0-1+2-3+4-5+6-7+8-9+10 = 5`,e:"Tính: 0-1+2-3+4-5+6-7+8-9+10 = 5. Số chẵn cộng vào, số lẻ trừ đi."},
+{c:"OOP",q:"What is the output? (obj1.equals(obj2) two different objects)",o:["false","true","obj1.equals(obj2)","Runtime error"],a:0,code:`A obj1 = new A();  // i=1, j=2
+A obj2 = new A();  // i=1, j=2
+System.out.println(obj1.equals(obj2));`,e:"Object.equals() mặc định so sánh tham chiếu. obj1 và obj2 là 2 objects khác nhau → false. Cần override equals() để so sánh nội dung."},
+{c:"OOP",q:"What is the output? (m1 One Two overloading)",o:["One Two","Two One","Two Two","One One"],a:0,code:`void m1(String x) { System.out.print("One "); }
+void m1(String x, String y) { System.out.println("Two"); }
+// obj.m1("ABC")      → 1 param → "One "
+// obj.m1("PQR","XYZ")→ 2 params → "Two"`,e:"Method overloading: m1(1 param) → 'One ', m1(2 params) → 'Two'. Kết quả: One Two"},
+{c:"OOP",q:"What is the output? (add duplicate method)",o:["Compile error","2. Addition: 50","1. Addition: 50","20, 30"],a:0,code:`void add(int x, int y){ ... "1. Addition..." }
+void add(int y, int x){ ... "2. Addition..." }
+// Hai method cùng signature: add(int, int)!`,e:"add(int x, int y) và add(int y, int x) có cùng parameter types → trùng khai báo (duplicate method) → Compile error!"},
+{c:"OOP",q:"What is the output? (B100 field vs method binding)",o:["B100","B120","A100","A120"],a:0,code:`class A { int i=100; public void printValue(){ System.out.print("A"); } }
+class B extends A { int i=120; public void printValue(){ System.out.print("B"); } }
+// A a = new B();
+// a.printValue() → dynamic binding → B → "B"
+// a.i            → static binding → A.i → "100"`,e:"printValue() dynamic binding → B's method → 'B'. Field i → compile-time binding theo kiểu tham chiếu A → 100. Kết quả: B100"},
+{c:"OOP",q:"What is the output? (1 2 from getB setX)",o:["1 2","2 1","1 1","2 2"],a:0,code:`class A { public int x = 1; public void setX(int a) { x = a; } }
+class B extends A { public int getB() { setX(2); return x; } }
+// a.x = 1 (unchanged)
+// b.getB() → setX(2) → x=2, return x=2`,e:"a.x = 1 không thay đổi. b.getB() gọi setX(2) → B's x=2, return 2. Output: '1 2'."},
+{c:"OOP",q:"What is the output? (rollBackA → 5,5)",o:["5, 5","6, 6","5, 6","6, 5"],a:0,code:`// class A: int a=5; getA(){return a;}
+// class B extends A: private int a=6;
+// rollBackA(){ a++; a=super.getA(); } → B's a becomes 5
+// objA.getA()=5, objB.getA() calls A's getA()=5`,e:"rollBackA: a++=7, a=super.getA()=5. B's a→5. objB.getA() gọi A's getA() trả về A's a=5. → 5, 5"},
+{c:"OOP",q:"What is the output? (constructor chain A→B→C)",o:["A. B. C","B. C. A.","B. A. C","A. C. B."],a:0,code:`class A { A() { System.out.println("A."); } }
+class B extends A { B() { System.out.println("B."); } }
+class C extends B { C() { System.out.println("C"); } }
+// new C() → gọi super() ngầm: A() → B() → C()`,e:"Khi tạo C, constructor gọi theo thứ tự từ cha → con: A() → B() → C(). In: A. B. C"},
+{c:"OOP",q:"What is the output? (A objA = new B(); objA.variableOne)",o:["100","200","300","0"],a:0,code:`class A { int variableOne = 100; }
+class B extends A { int variableTwo = 200; }
+// A objA = new B();
+// System.out.println(objA.variableOne); → truy cập field A`,e:"variableOne là field của A, truy cập qua tham chiếu A → 100. variableTwo không truy cập được qua kiểu A."},
+{c:"OOP",q:"What is the output? (String s1==s2 vs s1==s3)",o:["true false true","true true true","false true false","true true false"],a:0,code:`String s1 = "Java";   // String pool
+String s2 = "Java";   // String pool → cùng reference
+String s3 = new String("Java");  // new object trên heap
+// s1==s2 → true (same reference in pool)
+// s1==s3 → false (different objects)
+// s1.equals(s3) → true (same content)`,e:"String literals dùng pool → s1==s2 cùng tham chiếu → true. new String() tạo object mới → s1==s3 → false. equals() so sánh nội dung → true."},
+// ===== INHERITANCE =====
+{c:"Inheritance",q:"What is a subclass in Java inheritance?",o:["Class that inherits from another class","Class inherited from multiple classes","Final class in inheritance chain","Class that has abstract methods"],a:0,e:"Subclass (lớp con) kế thừa từ superclass bằng từ khóa 'extends'. Nhận non-private attributes và methods."},
+{c:"Inheritance",q:"How does Java handle multiple inheritance?",o:["Through interfaces","By allowing multiple parent classes","By using overload methods","All of the others"],a:0,e:"Java không hỗ trợ đa kế thừa class (Diamond Problem). Giải quyết qua interfaces — một class implements nhiều interfaces."},
+{c:"Inheritance",q:"Which statement about constructor in inheritance is CORRECT?",o:["Parent constructor called first when subclass object created","Parent constructor automatically inherited by child","Parent constructor cannot be called from subclass","Child must override parent constructor"],a:0,e:"Khi tạo subclass object, constructor cha LUÔN gọi trước (ngầm định hoặc super()). Constructor không được kế thừa."},
+{c:"Inheritance",q:"What is the 'instanceof' operator used for?",o:["Check if object is instance of particular class","Create new instance of class","Compare two objects for equality","Check if object is null"],a:0,e:"instanceof kiểm tra object có phải instance của class cụ thể không. VD: if(obj instanceof String) { ... }"},
+{c:"Inheritance",q:"Which method belongs to the Object class?",o:["equals()","compareTo()","concat()","compare()"],a:0,e:"equals() là method của Object class. compareTo() → Comparable. concat() → String. compare() → Comparator."},
+{c:"Inheritance",q:"Which statement about 'final' is TRUE?",o:["A final method cannot be overridden by subclasses","A final class can have subclasses","A final variable can be reassigned in subclass","A final class must have a final method"],a:0,e:"final method: không override được. final class: không có subclass. final variable: không reassign. final class không bắt buộc có final methods."},
+{c:"Inheritance",q:"What is the primary purpose of superclass-subclass relationship?",o:["Code reusability and polymorphism","Restrict access to methods","Create multiple instances","Enforce encapsulation"],a:0,e:"Kế thừa mục đích chính: (1) tái sử dụng code, (2) tạo điều kiện polymorphism."},
+{c:"Inheritance",q:"What happens if subclass doesn't implement all abstract methods?",o:["Subclass must be declared abstract","Subclass can still be instantiated","Compiles but throws error at runtime","No need to implement"],a:0,e:"Subclass không implement hết abstract methods → bắt buộc khai báo abstract. Abstract class không thể instantiate."},
+{c:"Inheritance",q:"When draw() is called on Shape reference pointing to Circle?",o:["Circle's draw() executes","Shape's draw() executes","Compilation error","Both methods execute"],a:0,e:"Runtime polymorphism: method gọi dựa trên kiểu object thực tế (Circle) lúc runtime, không phải kiểu tham chiếu (Shape)."},
+{c:"Inheritance",q:"What is the result of overriding toString() in subclass?",o:["Subclass objects provide custom string representation","Uses default Object's representation","toString() cannot be overridden","Must be called explicitly"],a:0,e:"Override toString() → custom string. Tự động gọi khi println(obj) hay string concatenation."},
+{c:"Inheritance",q:"Correct way to implement interface ISalary?",o:["class Employee implements ISalary {}","class Employee extends ISalary {}","class Employee imports ISalary {}","class Employee override ISalary {}"],a:0,e:"'implements' cho interface. 'extends' cho class. Có thể implements nhiều interfaces: class A implements B, C {}"},
+{c:"Inheritance",q:"Which statement about abstract classes is CORRECT?",o:["Can have both abstract and concrete methods","Can be instantiated with 'new'","Can only have abstract methods","Cannot have constructors"],a:0,e:"Abstract class có thể có cả abstract methods (chưa implement) và concrete methods (đã implement). Không thể instantiate trực tiếp."},
+{c:"Inheritance",q:"Correct way to declare abstract class?",o:["abstract class MyClass { }","public class MyClass { }","class MyClass : abstract { }","public class abstract MyClass { }"],a:0,e:"Cú pháp: abstract class ClassName { } hoặc public abstract class ClassName { }"},
+{c:"Inheritance",q:"What is method hiding vs overriding?",o:["A final method cannot be overridden","A static method can be overridden","Private method can be overridden","An abstract method can be final"],a:0,e:"final method không thể override. Static methods không bị override mà bị hide. Private methods không override được."},
+{c:"Inheritance",q:"Which methods about inheritance are TRUE? (best answer)",o:["Inheritance allows inheriting properties/methods; 'extends' indicates inheritance","Subclass can inherit private members","Java supports multiple class inheritance","None apply"],a:0,e:"A đúng: inheritance tái sử dụng code. B đúng: 'extends' khai báo. C sai: private không kế thừa. D sai: không đa kế thừa class."},
+{c:"Inheritance",q:"Consider private method in superclass, subclass tries to override it.",o:["Private method cannot be overridden in subclass","Subclass can successfully override it","Can override only if protected","Can override only if public"],a:0,e:"Private methods không visible với subclass nên không thể override. Subclass có thể định nghĩa method cùng tên nhưng đó là method mới, không phải override."},
+{c:"Inheritance",q:"What is the output? (A obj=new B(), methodA override)",o:["Class B","Class A","Compilation error","Runtime error"],a:0,code:`class A { public void methodA() { System.out.println("Class A"); } }
+class B extends A { public void methodA() { System.out.println("Class B"); } }
+// A obj = new B(); obj.methodA();
+// → runtime polymorphism → B's method`,e:"Instance method override → dynamic dispatch → B's methodA() → 'Class B'."},
+{c:"Inheritance",q:"What is the output? (Demo m2 calls super.m1)",o:["Compile error","Runtime error","Two One","One Two"],a:0,code:`class Demo { void m1(String x) { System.out.println("One"); } }
+class DemoChild extends Demo { public void m2(String x) { System.out.println("Two"); super.m1(x); } }
+// Demo obj = new DemoChild();
+// obj.m2("PE"); → ERROR: Demo has no m2!`,e:"Kiểu tham chiếu là Demo, Demo không có m2(). → Compile error! Phải dùng DemoChild obj = new DemoChild()."},
+{c:"Inheritance",q:"Which is the output? (abstract myName test)",o:["test","Runtime error","null","Compile error"],a:0,code:`abstract class A {
+    private String my_name = null;
+    public String myName() { my_name = "test"; return my_name; }
+    abstract void display();
+}
+class Main extends A {
+    void display() { System.out.println(myName()); }
+    // main: A obj = new Main(); obj.display();
+}`,e:"myName() public → kế thừa. Gán 'test' trả về 'test'. display() gọi myName() → in 'test'."},
+{c:"Inheritance",q:"What is the difference between composition and inheritance?",o:["Composition combines existing objects; inheritance reuses code","Composition creates dynamically; inheritance reuses code","Composition reuses code; inheritance creates dynamically","Composition creates statically; inheritance dynamically"],a:0,e:"Inheritance = is-a relationship. Composition = has-a relationship. Composition linh hoạt hơn, ít coupling hơn."},
+{c:"Inheritance",q:"What is the output? (Compile error Person no default constructor)",o:["Compile error","null","P1","FPTU"],a:0,code:`public class Person {
+    String id = "P1";
+    public Person(String id) { this.id = id; } // only parameterized!
+    // ...
+    // new Person() → no default constructor → Compile error!
+}`,e:"Khi có constructor có tham số, Java không tự cung cấp default constructor. new Person() → không tìm thấy → Compile error."},
+{c:"Inheritance",q:"Which OOP concept is term for single method name with multiple implementations?",o:["Overloading","Overriding","Abstracting","Encapsulation"],a:0,e:"Overloading (nạp chồng) = cùng tên method, khác tham số. Đây là compile-time polymorphism."},
+// ===== INTERFACES =====
+{c:"Interfaces",q:"Which statements about interfaces are CORRECT?",o:["Interface is blueprint for class; use 'implements'","Interface can have instance variables","Interface has constructors","All of the others"],a:0,e:"Interface là blueprint. Dùng 'implements'. KHÔNG có instance variables (chỉ constants), KHÔNG có constructor thông thường."},
+{c:"Interfaces",q:"Which is NOT a characteristic of interfaces?",o:["All interfaces extend to Object class","Constants are implicitly public, static, final","Methods may not be declared final or static","All method declarations are implicitly public and abstract"],a:0,e:"Interface không extend Object class trực tiếp. Constants là public static final ngầm định. Methods là public abstract ngầm định (trừ default/static Java 8+)."},
+{c:"Interfaces",q:"What is the output? (interface with body method)",o:["Compile error","hello","Runtime error","None"],a:0,code:`interface InFA {
+    static String message = "hello";
+    String getName() { }  // interface method không có body!
+}`,e:"Interface method không có body (trừ default/static Java 8+). 'String getName(){}' → Compile error."},
+{c:"Interfaces",q:"List, Set, Map are implemented as which type?",o:["Interface","Abstract class","Concrete class","Derived class"],a:0,e:"List, Set, Map trong Java Collections Framework là Interfaces. Các class cụ thể (ArrayList, HashSet, HashMap) implement chúng."},
+{c:"Interfaces",q:"What is the output? (anonymous interface setValue)",o:["3","1","2","Compile error"],a:0,code:`interface A { int setValue(int value); }
+int value = 1;
+A objA = new A() {
+    public int setValue(int value) {
+        value++; return value;
+    }
+};
+System.out.println(objA.setValue(++value));
+// ++value → value=2 (ngoài), truyền 2 vào
+// value++ → 3, return 3`,e:"++value trước khi gọi → value=2 ngoài, truyền 2 vào. Trong method: value++=3, return value=3. Output: 3"},
+{c:"Interfaces",q:"Which is correct for implementing ISalary?",o:["class Employee implements ISalary {}","class Employee extends ISalary {}","class Employee imports ISalary {}","class Employee override ISalary {}"],a:0,e:"'implements' là keyword để implement interface trong Java."},
+// ===== COLLECTIONS =====
+{c:"Collections",q:"Which method compares two arrays for equality?",o:["Arrays.equals()","Arrays.equal()","Arrays.compare()","Arrays.comparison()"],a:0,e:"Arrays.equals(a,b) so sánh từng phần tử. Arrays.deepEquals() cho mảng nhiều chiều. == chỉ so sánh reference."},
+{c:"Collections",q:"What happens when you assign array2 = array1?",o:["Both reference same memory location","A new copy is created","Compilation error","Java doesn't allow array assignment"],a:0,e:"Gán mảng = gán tham chiếu. Cả hai biến trỏ đến cùng object mảng. Thay đổi một → ảnh hưởng cái kia. Dùng Arrays.copyOf() để sao chép."},
+{c:"Collections",q:"Which method converts an array to a List?",o:["Arrays.asList()","Arrays.toList()","Arrays.convertToList()","Arrays.arrayToList()"],a:0,e:"Arrays.asList(T... a) → fixed-size List. Không add/remove được nhưng set được. ArrayList mới: new ArrayList<>(Arrays.asList(arr))"},
+{c:"Collections",q:"Which method finds maximum element in Collections?",o:["Collections.max()","Collections.findMax()","Collections.getMax()","Collections.maxElement()"],a:0,e:"Collections.max(Collection) → phần tử lớn nhất theo natural ordering. Overload với Comparator tùy chỉnh."},
+{c:"Collections",q:"Which method checks if element is present in ArrayList?",o:["contains()","exists()","includes()","has()"],a:0,e:"ArrayList.contains(Object) trả về true/false. Thuộc Collection interface."},
+{c:"Collections",q:"Which method adds element at specific position in List?",o:["add(int index, Object element)","add(Object element)","insert(int index, Object element)","put(int index, Object element)"],a:0,e:"List.add(int index, E element) chèn tại vị trí. List.add(E element) thêm vào cuối. 'insert'/'put' không có trong List."},
+{c:"Collections",q:"Which class shuffles an ArrayList?",o:["Collections","CollectionList","Arrays","ArrayUtil"],a:0,e:"Collections.shuffle(List) trộn ngẫu nhiên. Collections.shuffle(list, random) dùng Random tùy chỉnh."},
+{c:"Collections",q:"Which method finds frequency of element in Collections?",o:["frequency()","countOccurrence()","frequencyOf()","findFrequency()"],a:0,e:"Collections.frequency(Collection c, Object o) đếm số lần xuất hiện của o trong c."},
+{c:"Collections",q:"How to convert ArrayList to array?",o:["toArray()","copyToArray()","convertArray()","makeArray()"],a:0,e:"list.toArray() → Object[]. list.toArray(new Type[0]) → Type[]. Ví dụ: String[] arr = list.toArray(new String[0]);"},
+{c:"Collections",q:"What is the output of TreeMap?",o:["{1=4, 2=5, 3=4}","{3=4, 2=5, 1=4}","{1=4, 3=4, 2=5}","{3=4, 1=4, 2=5}"],a:0,code:`Map<Integer, Integer> myMap = new TreeMap<>();
+myMap.put(3, 4); myMap.put(1, 4); myMap.put(2, 5);
+System.out.println(myMap);`,e:"TreeMap sắp xếp keys tăng dần. Keys: 1,2,3 → {1=4, 2=5, 3=4}"},
+{c:"Collections",q:"What is the output? (reverse then sort ArrayList)",o:["[1, 2, 3, 5, 5]","[1, 2, 5, 3, 5]","[5, 5, 3, 2, 1]","[5, 3, 1, 2, 5]"],a:0,code:`list = [5,3,1,2,5]
+Collections.reverse(list) → [5,2,1,3,5]
+Collections.sort(list)    → [1,2,3,5,5]`,e:"reverse → [5,2,1,3,5]. sort → [1,2,3,5,5]. Sort luôn cho kết quả tăng dần bất kể thứ tự trước đó."},
+{c:"Collections",q:"What is the output? (swap Integer list by value)",o:["[1, 2]","[2, 1]","[1, 1]","[2, 2]"],a:0,code:`void swap(Integer t1, Integer t2) {
+    int temp=t1; t1=t2; t2=temp;  // chỉ đổi bản sao!
+}
+// list=[1,2], swap(list.get(0),list.get(1))`,e:"Java pass-by-value: t1,t2 là bản sao tham chiếu. Gán t1=t2 chỉ đổi bản sao cục bộ → list không đổi → [1,2]"},
+{c:"Collections",q:"What is the output? (set removeAll)",o:["[2, 3]","[3, 1]","[1, 2]","[4, 1]"],a:0,code:`set1 = {1,2,3} (1 thêm 2 lần nhưng Set không trùng)
+set2 = {1,4}
+set1.removeAll(set2) → xóa phần tử có trong set2
+Kết quả: {2,3}`,e:"HashSet không trùng. removeAll xóa tất cả phần tử có trong set2 ({1,4}) khỏi set1 → {2,3}"},
+{c:"Collections",q:"What is the output? (HashSet size with duplicate)",o:["3","4","1","0"],a:0,code:`set.add(1); set.add(2); set.add(3); set.add(1); // 1 thêm 2 lần!
+System.out.println(set.size());  // unique: 1,2,3 → size=3`,e:"HashSet không chứa phần tử trùng. 1 được add 2 lần nhưng chỉ count 1. size=3."},
+{c:"Collections",q:"What is the output of TreeMap keySet?",o:["[e, h, l, o]","[h, o, e, l]","[e, o, h, l]","[h, e, l, o]"],a:0,code:`// "hello" → chars: h,e,l,l,o
+// TreeMap keys (unique, sorted): e,h,l,o
+System.out.println(map.keySet());`,e:"TreeMap sắp xếp keys alphabetically. Unique keys từ 'hello': e,h,l,o → [e, h, l, o]"},
+{c:"Collections",q:"What is the initial size of new ArrayList?",o:["0","1","16","10"],a:0,e:"size() của ArrayList mới = 0 (chưa có phần tử). capacity mặc định = 10, nhưng capacity ≠ size."},
+{c:"Collections",q:"Main difference between HashSet and TreeSet?",o:["HashSet=hash table O(1); TreeSet=balanced tree O(log n)","HashSet allows duplicates; TreeSet does not","HashSet sorts elements; TreeSet does not","HashSet allows null; TreeSet does not"],a:0,e:"HashSet: hash table, O(1), không thứ tự. TreeSet: red-black tree, O(log n), tự sắp xếp."},
+{c:"Collections",q:"About ArrayList remove: which statement is TRUE?",o:["remove(int index) returns the deleted element","remove throws exception if element not found","remove returns integer value","All of the others"],a:0,e:"remove(int index) trả về element bị xóa. remove(Object o) trả về true/false. Không throw exception khi object không tồn tại (chỉ khi index ngoài giới hạn)."},
+{c:"Collections",q:"For word frequency tracking, best collection?",o:["HashMap<String, Integer>","LinkedList<String>","PriorityQueue<String>","HashSet<String>"],a:0,e:"HashMap<String, Integer>: key=word, value=count, O(1) put/get → tối ưu cho đếm tần suất."},
+{c:"Collections",q:"For quick contact lookup by phone number, best collection?",o:["HashMap with phone numbers as keys — O(1) lookup","Linear search through list","Collections.binarySearch() with sorted list","HashSet for searching"],a:0,e:"HashMap O(1) lookup là tối ưu. Linear O(n), Binary O(log n) đều chậm hơn."},
+{c:"Collections",q:"What is the output? (map.get('L') — uppercase L)",o:["null (printed as nothing)","2","1","3"],a:0,code:`// String data = "Hello" → chars: H,e,l,l,o
+// map keys: H,e,l,o (lowercase 'l' not uppercase 'L')
+System.out.println(map.get('L'));  // 'L' không tồn tại → null`,e:"'Hello' chứa chữ 'l' thường, không phải 'L' hoa. map.get('L') → không tìm thấy → null. (Nếu in null không là số thì đáp án là C/0 theo đề)"},
+{c:"Collections",q:"What is the output of TreeSet with duplicates?",o:["[1, 2, 3]","[1, 1, 2, 3]","[1, 3, 2]","[1, 3, 2, 1]"],a:0,code:`Set<Integer> set1 = new TreeSet<>();
+set1.add(1); set1.add(3); set1.add(2); set1.add(1);
+System.out.println(set1);`,e:"TreeSet: không trùng + sắp xếp tăng dần. Unique: {1,2,3} → sorted: [1,2,3]"},
+{c:"Collections",q:"How to concatenate two ArrayList a and b?",o:["a.addAll(b)","a.add(b)","a.concat(b)","a.concatAll(b)"],a:0,e:"List.addAll(Collection c) thêm tất cả phần tử của c vào list. Là cách chuẩn để nối hai List."},
+{c:"Collections",q:"Which is incorrect about Java Collection Framework?",o:["Classes in Collection always sort data from start","Provides architecture to store/manage group of objects","Provides data structures and algorithms","Supports searching, sorting, insertion, manipulation"],a:0,e:"D sai: không phải mọi collection đều tự sắp xếp. Chỉ TreeSet, TreeMap mới tự sắp xếp. ArrayList, HashSet thì không."},
+{c:"Collections",q:"Given int[] arr=new int[100]. Which statement is CORRECT?",o:["Maximum number of elements is 100","Maximum index is 100","arr[100]=100 is valid","Each element defaults to 1"],a:0,e:"arr = new int[100] → 100 phần tử, index từ 0 đến 99. arr[100] → ArrayIndexOutOfBoundsException. Mặc định giá trị = 0."},
+{c:"Collections",q:"float[] arr = new float[100]; arr[0]=3.4; What is true?",o:["3.4 is double by default, need explicit cast to float","3.4 is float by default","No problem with these lines","Line 1 throws IndexOutOfBound"],a:0,code:`float[] arr = new float[100];
+arr[0] = 3.4;   // ERROR: 3.4 là double literal!
+// Phải: arr[0] = 3.4f; hoặc arr[0] = (float)3.4;`,e:"3.4 là double literal mặc định. Gán vào float[] cần: 3.4f hoặc (float)3.4."},
+{c:"Collections",q:"ArrayList vs Array: which statement is correct?",o:["arr cannot change length; al can change length","arr might change length; al cannot","Both have fixed lengths","Access first element: al[0] and arr[0]"],a:0,e:"Array có kích thước cố định. ArrayList có thể thay đổi (dynamic resizing). ArrayList dùng get(0), không dùng []."},
+{c:"Collections",q:"Which statement about ArrayList size is used to determine element count?",o:["al.size()","al.length()","al.capacity()","al.length"],a:0,e:"al.size() trả về số phần tử hiện có. al.length không tồn tại (Array dùng .length). capacity không phải số phần tử thực."},
+{c:"Collections",q:"Default value of boolean elements in an array if NOT initialized?",o:["false","0","null","true"],a:0,e:"Array boolean mặc định = false. int=0, double=0.0, char='\\0', Object=null."},
+// ===== FILE I/O =====
+{c:"File I/O",q:"Which File method checks if file exists?",o:["exists()","isExists()","checkFile()","fileExists()"],a:0,e:"File.exists() trả về true nếu file/directory tồn tại. Các phương thức kia không tồn tại trong Java."},
+{c:"File I/O",q:"Which File method checks if file is hidden?",o:["isHidden()","isDisplay()","isWrite()","isRead()"],a:0,e:"File.isHidden() trả về true nếu file có thuộc tính ẩn. Xem thêm: isFile(), isDirectory(), canRead(), canWrite()."},
+{c:"File I/O",q:"Which File method checks if it's a file (not directory)?",o:["isFile()","checkFile()","isNotDirectory()","notIsDirectory()"],a:0,e:"File.isFile() trả về true nếu là file thông thường. File.isDirectory() trả về true nếu là thư mục."},
+{c:"File I/O",q:"nextLine() method belongs to which class?",o:["Scanner","Integer","String","System"],a:0,e:"Scanner.nextLine() đọc toàn bộ một dòng. Khác với next() chỉ đọc một token (đến space)."},
+{c:"File I/O",q:"How to create Scanner for file with UTF-8 encoding?",o:["new Scanner(Path.of(\"data.txt\"), StandardCharsets.UTF_8)","new Scanner(data.txt, StandardCharsets.UTF_8)","new Scanner(new FileInputStream(\"data.txt\"))","new Scanner(new Stream(\"data.txt\"), UTF_8)"],a:0,e:"Constructor Scanner(Path, Charset) đọc file với encoding cụ thể. Path.of() tạo Path object."},
+{c:"File I/O",q:"Purpose of FileOutputStream class?",o:["Write raw bytes to a file","Write primitive data types","Create object stream","All of the others"],a:0,e:"FileOutputStream ghi raw bytes. DataOutputStream: primitive types. ObjectOutputStream: objects. PrintWriter: text."},
+{c:"File I/O",q:"Which FileOutputStream method writes bytes?",o:["write()","print()","writeLine()","println()"],a:0,e:"FileOutputStream.write(int b) / write(byte[]) / write(byte[], int, int). print()/println() thuộc PrintStream."},
+{c:"File I/O",q:"RandomAccessFile mode that supports immediate metadata changes?",o:["\"rws\"","\"rw\"","\"rwd\"","\"r\""],a:0,e:"'rws': sync ngay cả content lẫn metadata xuống disk. 'rwd': chỉ sync content. 'rw': không đảm bảo. 'r': read-only."},
+{c:"File I/O",q:"Which class reads lines from a text file?",o:["BufferedReader","FileReader","FileInputStream","InputStreamReader"],a:0,e:"BufferedReader có readLine(). Dùng: new BufferedReader(new FileReader(file)) hoặc Files.newBufferedReader()."},
+{c:"File I/O",q:"Which exception when FileInputStream cannot find file?",o:["FileNotFoundException","IOException","FileAccessException","NotFoundIOException"],a:0,e:"FileInputStream ném FileNotFoundException (subclass của IOException) khi file không tồn tại."},
+{c:"File I/O",q:"Which exception may arise when creating new file with File object?",o:["IOException","FileNotFoundException","FileErrorException","IOExceptionDeniedException"],a:0,e:"createNewFile() ném IOException. FileNotFoundException xảy ra khi đọc. FileErrorException/IOExceptionDeniedException không tồn tại."},
+{c:"File I/O",q:"Which member of object WON'T be serialized?",o:["transient variables","final variables","inherited variables","All of the others"],a:0,e:"'transient' = không serialize. Khi deserialize → nhận default value. final và inherited variables vẫn serialize bình thường."},
+{c:"File I/O",q:"Which object is parameter of DataInputStream constructor?",o:["FileInputStream object","File object","BufferedReader object","RandomAccessFile object"],a:0,e:"DataInputStream(InputStream in). FileInputStream là subclass của InputStream → dùng làm tham số. Wrapper pattern."},
+{c:"File I/O",q:"Which superclass of PrintWriter and FileWriter?",o:["Writer class","Input class","File class","Object class"],a:0,e:"Writer là abstract superclass của tất cả character output streams: PrintWriter, FileWriter, BufferedWriter, StringWriter..."},
+{c:"File I/O",q:"How to append content to existing text file?",o:["Set append=true in FileWriter constructor","Set append=true in File constructor","Set append=true in OutputStream constructor","All of the others"],a:0,e:"new FileWriter(file, true) → append mode. new FileWriter(file) hoặc FileWriter(file, false) → overwrite (truncate)."},
+{c:"File I/O",q:"How does try-catch-finally work?",o:["try executes; catch handles exception; finally ALWAYS executes","try executes; finally handles; catch always executes","finally only if exception occurred","finally only if exception not caught"],a:0,e:"try: code có thể throw. catch: xử lý exception. finally: luôn chạy dù có exception hay không (trừ JVM exit)."},
+{c:"File I/O",q:"What is the output? (ArrayIndexOutOfBounds not caught)",o:["Finally statement, then ArrayIndexOutOfBoundsException","arr[10]=10, Finished!","Only exception","arr[10]=10, Finally, Finished!"],a:0,code:`int intArr[] = new int[10];
+intArr[10] = 10;           // ArrayIndexOutOfBoundsException!
+// catch(NullPointerException) → không khớp!
+// finally → LUÔN chạy
+// System.out.println("Finished!") → KHÔNG chạy`,e:"ArrayIndexOutOfBounds không match NullPointerException catch. finally luôn chạy → in 'Finally statement'. Exception lan lên JVM. 'Finished!' không chạy."},
+{c:"File I/O",q:"What are major reasons exceptions occur? (best choice)",o:["Invalid input, Null reference, Type mismatch (not syntax error)","Invalid input, Null reference, Syntax error","Null reference, Type mismatch, Syntax error","Invalid input, Type mismatch, Syntax error"],a:0,e:"Syntax error = compile-time error (không phải exception). Exceptions: invalid input (NumberFormatException), null reference (NPE), type mismatch (ClassCastException)."},
+{c:"File I/O",q:"Which statement about low-level vs high-level streams?",o:["Low-level: byte unit; High-level: primitive type unit","Low-level: UTF-8 char; High-level: UNICODE char","Low-level: char type; High-level: object type","Low-level: primitive; High-level: character"],a:0,e:"Low-level (InputStream/OutputStream): byte. High-level/wrapper (DataInputStream, BufferedReader): primitive types, objects, text."},
+{c:"File I/O",q:"What is the output? (RandomAccessFile write bytes A,B,C)",o:["ABC","ACB","BAC","BCA"],a:0,code:`byte[] array = {65, 66, 67};  // 'A','B','C'
+RandomAccessFile f = new RandomAccessFile("output.txt","rw");
+f.write(array); f.seek(0); f.read(arr);
+System.out.println(new String(arr));`,e:"Ghi 65='A', 66='B', 67='C'. seek(0) về đầu. read vào arr. new String(arr) = 'ABC'."},
+{c:"File I/O",q:"What is the output? (BufferedReader read line k=2)",o:["Xin chao","Hello","Hallo","Anyong Haseyo"],a:0,code:`// File: Hello / Xin chao / Hallo / Anyong Haseyo
+int k = 2; String line = "";
+for(int i=0; i<k; i++) { line = brf.readLine(); }
+System.out.println(line);
+// i=0 → "Hello", i=1 → "Xin chao" → print "Xin chao"`,e:"Vòng lặp 2 lần: lần 1='Hello', lần 2='Xin chao'. In giá trị cuối: 'Xin chao'."},
+{c:"File I/O",q:"What is the output? (Error3 Finish — throw new Exception)",o:["Error3 then Finish","Error1","Error2","Only Finish"],a:0,code:`try { throw new Exception(); }
+catch(ArithmeticException e) { /* không match */ }
+catch(NumberFormatException e) { /* không match */ }
+catch(Exception e) { System.out.println("Error3"); }  // match!
+finally { System.out.println("Finish"); }`,e:"throw new Exception() → không match Arithmetic/NumberFormat → match Exception → 'Error3'. finally luôn → 'Finish'."},
+{c:"File I/O",q:"What is the output? (FileInputStream list[1] = 1)",o:["1","0","2","3"],a:0,code:`// test.txt content: 01234567890
+FileInputStream fs = new FileInputStream("test.txt");
+byte[] list = new byte[100];
+fs.read(list, 0, 4);  // đọc 4 bytes: '0','1','2','3'
+// list[0]='0'(48), list[1]='1'(49), list[2]='2'(50)...
+System.out.format("%s\n", list[1]);`,e:"Đọc 4 bytes đầu của '01234567890': list[0]='0', list[1]='1', list[2]='2', list[3]='3'. list[1] = ký tự '1' = byte value 49. In: 1."},
+{c:"File I/O",q:"What is the output? (RandomAccessFile writeInt + writeChar → length=6)",o:["6","8","5","Compile error"],a:0,code:`RandomAccessFile f = new RandomAccessFile("output.txt","rw");
+f.writeInt(a);   // writeInt writes 4 bytes
+f.writeChar(c);  // writeChar writes 2 bytes
+// File f2 = new File("output.txt");
+// System.out.println(f2.length()); // cần f2.length() không phải length()`,e:"writeInt=4 bytes + writeChar=2 bytes = 6 bytes. Nhưng code gọi length() không có đối tượng → Compile error. Phải là f2.length()."},
+{c:"File I/O",q:"In RandomAccessFile, which mode supports immediate sync of content only?",o:["\"rwd\"","\"rws\"","\"rw\"","\"r\""],a:0,e:"'rwd': sync content xuống disk ngay. 'rws': sync cả content lẫn metadata. 'rw': buffered, không đảm bảo. 'r': read-only."},
+];
+
+// ==================== STATE ====================
+let QQ=[],answered=[],current=0,score=0,streak=0,timerInt=null,timeLeft=30,startTime=0;
+let activeFilters=new Set();
+let mode='all';
+const cats=[...new Set(Q.map(q=>q.c||q.cat||'').filter(Boolean))];
+
+// ==================== INIT ====================
+document.getElementById('total-count').textContent=Q.length;
+
+// Build filter buttons
+const fr=document.getElementById('filter-row');
+cats.forEach(cat=>{
+  const btn=document.createElement('button');
+  btn.className='filter-btn on';
+  btn.textContent=cat;
+  btn.dataset.cat=cat;
+  btn.onclick=()=>{
+    playClick();
+    if(activeFilters.has(cat)){activeFilters.delete(cat);btn.classList.remove('on');}
+    else{activeFilters.add(cat);btn.classList.add('on');}
+    updateCount();
+  };
+  fr.appendChild(btn);
+  activeFilters.add(cat);
+});
+function updateCount(){
+  const n=Q.filter(q=>activeFilters.has(q.c||q.cat||'')).length;
+  document.getElementById('total-count').textContent=n;
+}
+
+function setMode(m,btn){playClick();mode=m;document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active')}
+
+function startQuiz(){
+  playClick();getCtx();
+  let pool=Q.filter(q=>activeFilters.has(q.c||q.cat||''));
+  if(!pool.length){showToast('Chọn ít nhất 1 chủ đề!');return;}
+  if(mode==='random'){pool=[...pool].sort(()=>Math.random()-.5).slice(0,Math.min(40,pool.length));}
+  else if(mode==='timed'){pool=[...pool].sort(()=>Math.random()-.5);}
+  QQ=pool;
+  answered=new Array(QQ.length).fill(null);
+  current=0;score=0;streak=0;startTime=Date.now();
+  document.getElementById('start-screen').style.display='none';
+  document.getElementById('quiz-screen').style.display='block';
+  renderQ();
+}
+
+function renderQ(){
+  const q=QQ[current],total=QQ.length;
+  // normalize: support both 'o' and 'opts' field names
+  if(!q.opts && q.o) q.opts = q.o;
+  if(!q.opts) q.opts = [];
+  // normalize answer field
+  if(q.a === undefined && q.ans !== undefined) q.a = q.ans;
+  if(q.a === undefined) q.a = 0;
+  // normalize explanation
+  if(!q.e && q.exp) q.e = q.exp;
+  if(!q.e) q.e = '';
+
+  document.getElementById('q-counter').textContent=`Câu ${current+1}/${total}`;
+  document.getElementById('q-cat-label').textContent=q.c||q.cat||'';
+  document.getElementById('q-cat-badge').textContent=q.c||q.cat||'';
+  document.getElementById('progress-fill').style.width=`${((current+1)/total)*100}%`;
+  document.getElementById('score-display').textContent=score;
+  document.getElementById('q-number').textContent=`CÂU ${current+1}`;
+  document.getElementById('q-text').textContent=(q.q||'').split('\n')[0];
+  const cb=document.getElementById('code-block');
+  if(q.code){cb.style.display='block';cb.textContent=q.code;}else{cb.style.display='none';}
+  const grid=document.getElementById('options-grid');
+  grid.innerHTML='';
+  const L=['A','B','C','D','E','F'];
+  q.opts.forEach((opt,i)=>{
+    const btn=document.createElement('button');
+    btn.className='option-btn';
+    btn.innerHTML=`<span class="option-letter">${L[i]}</span><span class="option-text">${opt}</span>`;
+    const prev=answered[current];
+    if(prev!==null){
+      btn.disabled=true;
+      if(i===q.a)btn.classList.add('correct');
+      else if(i===prev&&prev!==q.a)btn.classList.add('wrong');
+    }else{btn.onclick=()=>selectAns(i);}
+    grid.appendChild(btn);
+  });
+  const eb=document.getElementById('explanation-box');
+  if(answered[current]!==null){eb.innerHTML=`<strong>💡 Giải thích:</strong> ${q.e}`;eb.classList.add('show');}
+  else{eb.innerHTML='';eb.classList.remove('show');}
+  clearInterval(timerInt);
+  if(answered[current]===null){
+    timeLeft=mode==='timed'?20:30;
+    updateTimer();
+    timerInt=setInterval(()=>{timeLeft--;updateTimer();if(timeLeft<=5)playTick();if(timeLeft<=0){clearInterval(timerInt);autoSkip();}},1000);
+  }else{document.getElementById('timer-display').textContent='⏸';document.getElementById('timer-display').classList.remove('urgent');}
+  document.getElementById('btn-prev').style.opacity=current===0?'0.3':'1';
+}
+
+function updateTimer(){const td=document.getElementById('timer-display');td.textContent=timeLeft+'s';td.classList.toggle('urgent',timeLeft<=5);}
+function autoSkip(){if(answered[current]===null){answered[current]=-1;renderQ();}}
+
+function getA(q){return (q.a!==undefined)?q.a:(q.ans!==undefined?q.ans:0);}
+function getE(q){return q.e||q.exp||'';}
+function getC(q){return q.c||q.cat||'';}
+
+function selectAns(idx){
+  if(answered[current]!==null)return;
+  clearInterval(timerInt);playClick();
+  const q=QQ[current];answered[current]=idx;
+  const a=getA(q);
+  const btns=document.querySelectorAll('.option-btn');
+  btns.forEach(b=>b.disabled=true);
+  if(idx===a){btns[idx].classList.add('correct');score+=10+Math.max(0,timeLeft);streak++;playCorrect();spawnP(btns[idx],'#43e97b');document.getElementById('score-display').textContent=score;if(streak>=3)showStreak();}
+  else{btns[idx].classList.add('wrong');btns[a].classList.add('reveal');streak=0;playWrong();spawnP(btns[idx],'#ff6584');}
+  const eb=document.getElementById('explanation-box');
+  eb.innerHTML=`<strong>💡 Giải thích:</strong> ${getE(q)}`;eb.classList.add('show');
+}
+
+function showStreak(){const old=document.querySelector('.streak-badge');if(old)old.remove();const b=document.createElement('div');b.className='streak-badge';b.textContent=`🔥 ${streak} liên tiếp!`;document.body.appendChild(b);setTimeout(()=>b.remove(),2000);}
+
+function spawnP(el,color){
+  const r=el.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
+  for(let i=0;i<10;i++){
+    const p=document.createElement('div');p.className='particle';
+    const s=Math.random()*7+3,a=Math.random()*Math.PI*2,d=Math.random()*70+30;
+    p.style.cssText=`width:${s}px;height:${s}px;background:${color};left:${cx}px;top:${cy}px;--tx:${Math.cos(a)*d}px;--ty:${Math.sin(a)*d}px;`;
+    document.body.appendChild(p);setTimeout(()=>p.remove(),1000);
+  }
+}
+
+function nextQ(){playClick();if(current<QQ.length-1){current++;renderQ();}else{showResults();}}
+function prevQ(){playClick();if(current>0){current--;renderQ();}}
+function skipQ(){playClick();if(answered[current]===null)answered[current]=-1;nextQ();}
+
+function showResults(){
+  clearInterval(timerInt);
+  const elapsed=Math.round((Date.now()-startTime)/1000);
+  playComplete();
+  document.getElementById('quiz-screen').style.display='none';
+  document.getElementById('result-screen').style.display='flex';
+  const total=QQ.length,correct=answered.filter((a,i)=>a===getA(QQ[i])).length,wrong=answered.filter((a,i)=>a!==null&&a!==-1&&a!==getA(QQ[i])).length,pct=Math.round((correct/total)*100);
+  document.getElementById('r-correct').textContent=correct;
+  document.getElementById('r-wrong').textContent=wrong;
+  document.getElementById('r-score').textContent=score;
+  document.getElementById('r-time').textContent=elapsed+'s';
+  document.getElementById('r-pct').textContent=pct+'%';
+  let emoji,title,msg;
+  if(pct>=90){emoji='🏆';title='Xuất sắc!';msg='Java Master! Kiến thức của bạn thực sự ấn tượng.';}
+  else if(pct>=75){emoji='🎉';title='Rất giỏi!';msg='Kết quả tuyệt vời! Gần hoàn hảo rồi.';}
+  else if(pct>=60){emoji='👍';title='Khá tốt!';msg='Nắm được phần lớn. Luyện thêm một chút nhé!';}
+  else if(pct>=40){emoji='📚';title='Cần ôn thêm';msg='Hãy xem lại lý thuyết và thực hành thêm.';}
+  else{emoji='💪';title='Cố lên!';msg='Đừng nản! Ôn lại từ đầu và thử lại. Bạn làm được!';}
+  document.getElementById('r-emoji').textContent=emoji;
+  document.getElementById('r-title').textContent=title;
+  document.getElementById('r-msg').textContent=msg;
+}
+
+function showReview(){
+  playClick();
+  const c=document.getElementById('review-container');
+  c.style.display='block';c.innerHTML='<h3 style="margin-bottom:16px;font-size:18px;font-weight:800;">📋 Xem lại tất cả câu hỏi</h3>';
+  const L=['A','B','C','D','E','F'];
+  QQ.forEach((q,i)=>{
+    const ua=answered[i],a=getA(q),opts=q.opts||q.o||[],ok=ua===a;
+    const div=document.createElement('div');
+    div.className=`review-item ${ok?'rc':'rw'}`;
+    div.innerHTML=`<div class="review-badge ${ok?'bc':'bw'}">${ok?'✓ ĐÚNG':'✗ SAI'} — Câu ${i+1} · ${getC(q)}</div>
+    <div style="font-weight:600;margin-bottom:8px;font-size:14px;">${(q.q||'').split('\n')[0]}</div>
+    ${!ok?`<div style="color:var(--wrong);font-size:13px;margin-bottom:4px;">Bạn chọn: ${ua>=0?L[ua]+'. '+(opts[ua]||'?'):'⏭ Bỏ qua'}</div>`:''}
+    <div style="color:var(--correct);font-size:13px;margin-bottom:8px;">✓ Đúng: ${L[a]}. ${opts[a]||''}</div>
+    <div style="color:var(--text2);font-size:12px;line-height:1.6;">💡 ${getE(q)}</div>`;
+    c.appendChild(div);
+  });
+}
+
+function restartQuiz(){
+  playClick();clearInterval(timerInt);
+  document.getElementById('result-screen').style.display='none';
+  document.getElementById('review-container').style.display='none';
+  document.getElementById('review-container').innerHTML='';
+  document.getElementById('start-screen').style.display='flex';
+  updateCount();
+}
+
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000);}
+
+document.addEventListener('keydown',e=>{
+  if(document.getElementById('quiz-screen').style.display==='block'){
+    const map={'a':0,'b':1,'c':2,'d':3,'1':0,'2':1,'3':2,'4':3};
+    const k=e.key.toLowerCase();
+    if(k in map&&answered[current]===null)selectAns(map[k]);
+    if(e.key==='ArrowRight'||e.key==='Enter')nextQ();
+    if(e.key==='ArrowLeft')prevQ();
+  }
+});
+</script>
+</body>
+</html>
